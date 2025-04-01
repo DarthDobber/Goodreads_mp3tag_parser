@@ -1,0 +1,376 @@
+####################################
+# Mp3tag parsing for goodreads.com, created by FidoFuz
+#
+# 2021-02-27 Initial Release
+# 2021-02-28 Miscellaneous Fixes
+# 2023-02-27 Updated by SeaNap
+# 2025-03-25 Updated by Darthdobber to mirror as best as possible the audible parser
+#
+# This file should be saved in your mp3tag sources folder: %AppData%\Roaming\Mp3tag\data\sources
+#
+###################################
+
+[Name]=Goodreads
+[BasedOn]=www.goodreads.com
+[IndexUrl]=https://www.goodreads.com/search?utf8=%E2%9C%93&search_type=books&q=
+[AlbumUrl]=https://www.goodreads.com
+[WordSeperator]=+
+[IndexFormat]=%Title%|%_url%|%Author%
+[SearchBy]=%artist% $regexp(%album%,'[- ]+cd ?\d+$',,1)
+[Encoding]=url-utf-8
+
+[ParserScriptIndex]=...
+# ###################################################################
+#					I  N  D  E  X
+# ###################################################################
+#DebugWriteInput "C:\Users\%user%\Desktop\goodreads\search.html"
+#Debug "ON" "C:\Users\%user%\Desktop\goodreads\search_debug.txt"
+
+findline "<meta content='Search results" 1 1
+unspace
+if "<meta"
+	findline "<tr itemscope itemtype=\"http://schema.org/Book\">" 1 1
+	unspace
+	do
+		#  Title
+		findline "<a title=\""
+		findinline "<a title=\""
+		sayuntil "\""
+		say "|"
+
+		# Url
+		findinline "href=\""	
+		sayuntil "\">"
+		say "|"
+	
+		# Author
+		findline "class=\"authorName\""
+		joinuntil "</a>"
+		findinline "\"name\">"
+		sayuntil "<"
+	
+		saynewline
+		findline "<tr itemscope itemtype=\"http://schema.org/Book\">" 1 1
+		unspace
+	while "<tr" 20
+else
+	gotoline 1
+	# redirected straight to the page instead of a search page, just pass it to the Album Parser
+	# usually when an ISDB or ASIN is provided as the search
+	say "|"
+	sayoutput "currenturl"
+	say "|"
+	saynewline
+endif
+
+[ParserScriptAlbum]=...
+# ###################################################################
+#					A  L  B  U  M
+# ###################################################################
+#DebugWriteInput "C:\Users\%user%\Desktop\goodreads\detail.html"
+#Debug "ON" "C:\Users\%user%\Desktop\goodreads\detail_debug.txt"
+
+
+# Determining if Book is part of a Series
+findline "\"__typename\":\"Book\",\"id\":"
+findinline "\"__typename\":\"Book\",\"id\":"
+findinline "\"titleComplete\":\""
+findinline "\",\""
+movechar -4
+if ")"
+	outputto "PARENTHESIS"
+	say "1"
+	movechar -2
+	# Single Digit Book Series Beginning with a # Handling
+	if "#"
+		outputto "SERIES-PART"
+		movechar 1
+		saynextnumber
+		outputto "POUND"
+		say "1"
+		movechar -3
+		if ","
+			outputto "COMMA"
+			say "1"
+			movechar -1
+			if "k"
+				outputto "BOOK"
+				say "1"
+			endif
+		endif
+		if "k"
+			outputto "BOOK"
+			say "1"
+		endif
+	endif
+	# Single Digit Book Series Beginning with a Space
+	if " "
+		outputto "SERIES-PART"
+		movechar 1
+		saynextnumber
+		movechar -2
+		if ","
+			outputto "COMMA"
+			say "1"
+			movechar -1
+			if "k"
+				outputto "BOOK"
+				say "1"
+			endif
+		endif
+		if "k"
+			outputto "BOOK"
+			say "1"
+		endif
+	endif
+	ifNotOutput "SERIES-PART"
+		# Double Digit Book Series beginning with a #
+		movechar -1
+		if "#"
+			outputto "SERIES-PART"
+			movechar 1
+			saynextnumber
+			outputto "POUND"
+			say "1"
+			movechar -5
+			if ","
+				outputto "COMMA"
+				say "1"
+				movechar -1
+				if "k"
+					outputto "BOOK"
+					say "1"
+				endif
+			endif
+			if "k"
+				outputto "BOOK"
+				say "1"
+			endif
+		endif
+		# Double Digit Book Series Beginning with a Space
+		if " "
+			outputto "SERIES-PART"
+			movechar 1
+			saynextnumber
+			movechar -5
+			if ","
+				outputto "COMMA"
+				say "1"
+				movechar -1
+				if "k"
+					outputto "BOOK"
+					say "1"
+				endif
+			endif
+		endif
+		if "k"
+			outputto "BOOK"
+			say "1"
+		endif
+	endif
+else
+	movechar -1
+	outputto "SERIES-PART"
+	saynextnumber
+	ifNotOutput "SERIES-PART"
+		movechar 1
+		outputto "SERIES-PART"
+		saynextnumber		
+	endif
+	movechar -1
+	if "#"
+		outputto "POUND"
+		say "1"
+	endif
+	movechar -2
+	if ","
+		outputto "COMMA"
+		say "1"
+	endif
+	if "k"
+		movechar -5
+		if "," 
+			outputto "COMMA"
+			say "1"
+		endif
+	endif
+endif
+
+# ALBUM Processing
+
+gotoline 1
+findline "\"__typename\":\"Book\",\"id\":"
+findinline "\"__typename\":\"Book\",\"id\":"
+findinline "\"titleComplete\":\""
+outputto "ALBUM"
+
+ifNotOutput "SERIES-PART"
+	sayuntil "\",\""
+endif
+
+ifOutput "PARENTHESIS"
+	sayuntil "("
+else
+	ifOutPut "COMMA"
+		sayuntil ", Book"
+	else
+		sayuntil "Book"
+	endif
+endif
+
+# Series Processing
+
+ifOutput "SERIES-PART"
+	gotoline 1
+	findline "\"__typename\":\"Book\",\"id\":"
+	findinline "\"__typename\":\"Book\",\"id\":"
+	findinline "\"titleComplete\":\""
+	outputto "SERIES"
+
+	ifOutput "PARENTHESIS"
+		findinline "("
+		ifOutput "COMMA"
+			ifOutput "BOOK"
+				sayuntil ", Book"
+			else
+				ifOutPut "POUND"
+					sayuntil ", #"
+				endif
+			endif
+		else
+			ifOutPut "BOOK"
+				sayuntil "Book"
+			else
+				sayuntil "#"
+			endif
+		endif
+	else
+		findinline ":"
+		ifOutput "COMMA"
+			ifOutput "BOOK"
+				sayuntil ", Book"
+			else
+				ifOutPut "POUND"
+					sayuntil ", #"
+				endif
+			endif
+		else
+			ifOutPut "BOOK"
+				sayuntil "Book"
+			else
+				sayuntil "#"
+			endif
+		endif
+	endif
+endif
+
+# Cover
+gotoline 1
+outputto "COVERURL"
+findline "\",\"image\":\""
+findinline "\",\"image\":\""
+sayuntil "\",\""
+
+# Author
+outputto "ALBUMARTIST"
+findline "type\":\"Person\",\"name\":\""
+findinline "type\":\"Person\",\"name\":\""
+sayuntil "\",\""
+outputto "ARTIST"
+SayOutPut "ALBUMARTIST"
+
+# Comment and Description
+findline "ROOT_QUERY"
+outputto "COMMENT"
+findinline "\"titleComplete\""
+findinline "description\":\""
+sayuntil "\",\"primaryContributorEdge"
+outputto "DESCRIPTION"
+sayoutput "COMMENT"
+
+# Genres
+findline "ROOT_QUERY"
+findinline "\"bookGenres\":["
+ifNot "]"	
+	outputto "GENRE"
+	findinline "{\"__typename\":\"Genre\",\"name\":\""
+	sayuntil "\""
+	say " \\\\ "
+	findinline "{\"__typename\":\"Genre\",\"name\":\""
+	sayuntil "\""
+	say " \\\\ "
+	findinline "{\"__typename\":\"Genre\",\"name\":\""
+	sayuntil "\""
+endif
+
+# Publisher
+findline "ROOT_QUERY"
+outputto "PUBLISHER"
+findinline "\"publisher\":\""
+sayuntil "\""
+
+# Year
+gotoline 1
+outputto "YEAR"
+findline "publicationInfo\">"
+findinline "publicationInfo\">"
+findinline "<"
+movechar -5
+sayuntil "<"
+
+# Rating
+outputto "RATING"
+findline "<div class=\"RatingStatistics__rating\" aria-hidden=\"true\">"
+findinline "<div class=\"RatingStatistics__rating\" aria-hidden=\"true\">"
+sayuntil "<"
+
+# Content Group
+IfOutput "SERIES"
+	outputto "CONTENTGROUP"
+	SayOutput "SERIES"
+	Say ", Book #"
+	SayOutput "SERIES-PART"
+endif
+
+# AlbumSort
+IfOutput "SERIES"
+	outputto "ALBUMSORT"
+	SayOutput "SERIES"
+	Say " "
+    SayOutput "SERIES-PART"
+    Say " - "
+    SayOutput "ALBUM"
+else
+	outputto "ALBUMSORT"
+	SayOutput "ALBUM"
+endif
+
+# Title
+OutputTo "TITLE"
+SayOutput "ALBUM"
+
+# Check if we have series info
+IfOutput "SERIES"
+    # Use series format
+    Say " - "
+    SayOutput "SERIES"
+    IfOutput "SERIES-PART"
+        Say " Book "
+        SayOutput "SERIES-PART"
+    EndIf
+Else
+    # No series, use subtitle if available
+    IfOutput "SUBTITLE"
+        Say ": "
+        SayOutput "SUBTITLE"
+    EndIf
+EndIf
+
+Say " - "
+SayOutput "ARTIST"
+
+# Removing Temporary Tags
+set "POUND"
+set "COMMA"
+set "PARENTHESIS"
+set "BOOK"
