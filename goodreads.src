@@ -291,16 +291,15 @@ sayoutput "COMMENT"
 # Genres
 findline "ROOT_QUERY"
 findinline "\"bookGenres\":["
-ifNot "]"	
+ifNot "]"
 	outputto "GENRE"
-	findinline "{\"__typename\":\"Genre\",\"name\":\""
-	sayuntil "\""
-	say " \\\\ "
-	findinline "{\"__typename\":\"Genre\",\"name\":\""
-	sayuntil "\""
-	say " \\\\ "
-	findinline "{\"__typename\":\"Genre\",\"name\":\""
-	sayuntil "\""
+	findinline "{\"__typename\":\"Genre\",\""
+	do
+		findinline "name\":\""
+		sayuntil "\""
+		say " / "
+		findinline "{\"__typename\":\"Genre\",\""
+	while "name\":\"" 3
 endif
 
 # Publisher
