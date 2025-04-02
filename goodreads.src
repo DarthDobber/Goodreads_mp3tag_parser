@@ -206,15 +206,15 @@ outputto "ALBUM"
 
 ifNotOutput "SERIES-PART"
 	sayuntil "\",\""
-endif
-
-ifOutput "PARENTHESIS"
-	sayuntil "("
 else
-	ifOutPut "COMMA"
-		sayuntil ", Book"
+	ifOutput "PARENTHESIS"
+		sayuntil "("
 	else
-		sayuntil "Book"
+		ifOutPut "COMMA"
+			sayuntil ", Book"
+		else
+			sayuntil "Book"
+		endif
 	endif
 endif
 
