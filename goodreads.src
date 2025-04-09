@@ -367,6 +367,10 @@ else
 	SayOutput "ALBUM"
 endif
 
+# Url
+OutputTo "WWWAUDIOFILE"
+sayOutput "CURRENTURL"
+
 # Title
 OutputTo "TITLE"
 SayOutput "ALBUM"
