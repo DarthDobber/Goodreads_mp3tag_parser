@@ -282,6 +282,24 @@ SayOutPut "ALBUMARTIST"
 # Comment and Description
 findline "ROOT_QUERY"
 outputto "COMMENT"
+# <b>
+Replace "\u003cb\u003e" ""
+# </b>
+Replace "\u003c/b\u003e" ""
+# <i>
+Replace "\u003ci\u003e" ""
+# </i>
+Replace "\u003c/i\u003e" ""
+# />
+Replace "/\u003e" ""
+# <br
+Replace "\u003cbr" ""
+# <b
+Replace "\u003cb" ""
+# <strong>
+Replace "\u003cstrong\u003e" ""
+# </strong>
+Replace "\u003c/strong\u003e" ""
 findinline "\"titleComplete\""
 findinline "description\":\""
 sayuntil "\",\"primaryContributorEdge"
