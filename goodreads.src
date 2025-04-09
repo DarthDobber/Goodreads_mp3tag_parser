@@ -327,10 +327,12 @@ ifNot "]"
 endif
 
 # Publisher
-findline "ROOT_QUERY"
-outputto "PUBLISHER"
-findinline "\"publisher\":\""
-sayuntil "\""
+findline "ROOT_QUERY" 1 1
+findinline "\"publisher\":\"" 1 1
+if "\"publisher\":\""
+	outputto "PUBLISHER"
+	sayuntil "\""
+endif
 
 # Year
 gotoline 1
