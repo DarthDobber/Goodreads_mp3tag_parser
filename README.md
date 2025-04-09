@@ -40,6 +40,7 @@ The parser populates the following tags:
 - **COVERURL**: URL to the cover image
 - **CONTENTGROUP**: Formatted series information
 - **ALBUMSORT**: Properly formatted for sorting (Series Name + Number + Title or Title only for standalone books)
+- **WWWAUDIOFILE**: URL of page where results are scrapped.
 
 ## Series Handling
 The parser intelligently extracts series information from titles with various formats:
