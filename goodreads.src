@@ -293,13 +293,18 @@ findline "ROOT_QUERY"
 findinline "\"bookGenres\":["
 ifNot "]"
 	outputto "GENRE"
-	findinline "{\"__typename\":\"Genre\",\""
-	do
-		findinline "name\":\""
-		sayuntil "\""
-		say " / "
-		findinline "{\"__typename\":\"Genre\",\""
-	while "name\":\"" 3
+	findinline "{\"__typename\":\"Genre\",\"na" 1 1
+	if "me\":\""
+		do
+			#findinline "name\":\""
+			movechar 5
+			sayuntil "\""
+			findinline "{\"__typename\":\"Genre\",\"na" 1 1
+			if "me\":\""
+				say " / "
+			endif
+		while "me\":\"" 3
+	endif
 endif
 
 # Publisher
