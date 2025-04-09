@@ -274,6 +274,7 @@ sayuntil "\",\""
 # Author
 outputto "ALBUMARTIST"
 findline "type\":\"Person\",\"name\":\""
+RegexpReplace "\s{2,}" " "
 findinline "type\":\"Person\",\"name\":\""
 sayuntil "\",\""
 outputto "ARTIST"
