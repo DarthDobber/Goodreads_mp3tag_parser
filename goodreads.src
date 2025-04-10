@@ -349,11 +349,15 @@ findline "<div class=\"RatingStatistics__rating\" aria-hidden=\"true\">"
 findinline "<div class=\"RatingStatistics__rating\" aria-hidden=\"true\">"
 sayuntil "<"
 
-# Content Group
+# Content Group and Movement
 IfOutput "SERIES"
 	outputto "CONTENTGROUP"
 	SayOutput "SERIES"
 	Say ", Book #"
+	SayOutput "SERIES-PART"
+	outputto "MOVEMENTNAME"
+	SayOutput "SERIES"
+	outputto "MOVEMENT"
 	SayOutput "SERIES-PART"
 endif
 
